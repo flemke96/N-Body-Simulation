@@ -8,8 +8,8 @@ Created on Sat Mar 16 22:17:56 2019
 import numpy as np
 from numpy.random import normal
 from scipy import constants
-import matplotlib.pyplot as plt
-
+from matplotlib import pyplot as plt
+from matplotlib import animation
 
 #%% 
 
@@ -89,8 +89,9 @@ elif mode == 2:
 
 # =================================================================================
 # ========= MODE 3 ==========
-# a random example intitial conditions set from mode 2 with N=3
+# an example set of intitial conditions set from (mode 2) with N=3
 # just for experimenting with visualization, should not be changed
+# to have a constant set of data
         
 elif mode == 3:
     N = 3                     # number of bodies
@@ -154,7 +155,8 @@ def grav_force(m1,m2,r1,r2):
 
 
 
-#%% Calculation of position for all times
+#%% ===================== CALCULATION
+# Calculating the position at every point in time
 
 
 for t_i in range(timesteps):
@@ -172,7 +174,7 @@ for t_i in range(timesteps):
 
 
 
-#%% VISUALISATION
+#%% =========================== VISUALISATION
 
 
 X = np.zeros([N,timesteps])
@@ -193,7 +195,7 @@ for body_i in range(N):
     plt.plot(X[body_i],                 # plot path of bodies
              Y[body_i],
              color=colorlist[body_i])
-    plt.plot(X[body_i,timesteps-1],     # plot last calculated position of bodies
+    plt.plot(X[body_i,timesteps-1],     # plot current position of bodies
              Y[body_i,timesteps-1],
              color=colorlist[body_i],
              marker='o')
@@ -210,11 +212,11 @@ plt.tight_layout()
 plt.show()
 #plt.savefig('3bodies_random.pdf',bboxinches='tight')
 
+#print('Computation completed.\nShow animation (y/n)?')
+#answer = input()
+answer = 'n'
 
-print('Computation completed.\nShow animation (y/n)?')
-answer = input()
-
-#%%
+#%%============ animate in console ==================
 
 
 xmax = 0.2
@@ -243,7 +245,57 @@ if answer == 'y':
         print(chr(27) + "[2J")
         plt.show()
 
-#%%
+#%% ============= ANIMATION in extra window as actual animation ============
+
+# x- and y-axes boundaries
+xmax = 0.2
+xmin = -0.1
+ymax = 0.15
+ymin = -0.15
+
+# defining X- and Y-values for the 3 different lines for the plot animation
+# for plotting the position (x over y)
+for body_i in range(N):
+    X[body_i] = r[body_i,:,0]
+    Y[body_i] = r[body_i,:,1]
+    Z[body_i] = r[body_i,:,2]
 
 
+
+# actual animation part
+fig = plt.figure()
+ax = plt.axes(xlim=(xmin,xmax),
+              ylim=(ymin,ymax))
+line1, line2, line3 = ax.plot([], [],
+                              [], [],
+                              [], [], lw=1)
+
+def init():
+    line1.set_data([],[])
+    line2.set_data([],[])
+    line3.set_data([],[])
+    return line1,line2,line3
+
+
+# animation function
+def animate(t_i):
+    line1.set_data(X[0,0:t_i],Y[0,0:t_i])
+    line2.set_data(X[1,0:t_i],Y[1,0:t_i])
+    line3.set_data(X[2,0:t_i],Y[2,0:t_i])
+
+    return line1, line2, line3
+
+
+#dt_plot = 500
+dt_plot = 200
+
+anim = animation.FuncAnimation(fig, func=animate, init_func=init,
+                               frames=range(0,timesteps,dt_plot),
+                               interval=30, blit=True,
+                               repeat=True, repeat_delay=500)
+
+#anim.save('basic_animation.gif', fps=30, extra_args=['-vcodec', 'libx264'])
+#anim.save('basic_animation.gif')
+
+plt.show
 
